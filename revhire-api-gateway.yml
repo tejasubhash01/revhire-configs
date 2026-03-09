@@ -1,0 +1,125 @@
+server:
+  port: 8087
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+jwt:
+  secret: mySecretKeyForJWTGenerationWithAtLeast32CharactersLong!
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:4200"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        - id: auth-service
+          uri: lb://revhire-auth-service
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: auth-service-cb
+                fallbackUri: forward:/fallback/auth
+        - id: user-service
+          uri: lb://revhire-user-service
+          predicates:
+            - Path=/api/v1/users/**,/api/v1/favourites/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: user-service-cb
+                fallbackUri: forward:/fallback/user
+        - id: jobseeker-service
+          uri: lb://revhire-jobseeker-service
+          predicates:
+            - Path=/api/v1/jobseekers/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: jobseeker-service-cb
+                fallbackUri: forward:/fallback/jobseeker
+        - id: employer-service
+          uri: lb://revhire-employer-service
+          predicates:
+            - Path=/api/v1/employers/**,/api/v1/jobs/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: employer-service-cb
+                fallbackUri: forward:/fallback/employer
+        - id: application-service
+          uri: lb://revhire-application-service
+          predicates:
+            - Path=/api/v1/applications/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: application-service-cb
+                fallbackUri: forward:/fallback/application
+        - id: notification-service
+          uri: lb://revhire-notification-service
+          predicates:
+            - Path=/api/v1/notifications/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: notification-service-cb
+                fallbackUri: forward:/fallback/notification
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+        slowCallRateThreshold: 100
+        slowCallDurationThreshold: 2s
+    instances:
+      auth-service-cb:
+        baseConfig: default
+      user-service-cb:
+        baseConfig: default
+      jobseeker-service-cb:
+        baseConfig: default
+      employer-service-cb:
+        baseConfig: default
+      application-service-cb:
+        baseConfig: default
+      notification-service-cb:
+        baseConfig: default
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,circuitbreakers
+  health:
+    circuitbreakers:
+      enabled: true
