@@ -94,13 +94,13 @@ resilience4j:
       default:
         registerHealthIndicator: true
         slidingWindowSize: 20
-        minimumNumberOfCalls: 10
+        minimumNumberOfCalls: 20
         permittedNumberOfCallsInHalfOpenState: 5
         automaticTransitionFromOpenToHalfOpenEnabled: true
-        waitDurationInOpenState: 10s
-        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 80
         slowCallRateThreshold: 100
-        slowCallDurationThreshold: 10s
+        slowCallDurationThreshold: 30s
     instances:
       auth-service-cb:
         baseConfig: default
