@@ -100,7 +100,7 @@ resilience4j:
         waitDurationInOpenState: 10s
         failureRateThreshold: 50
         slowCallRateThreshold: 100
-        slowCallDurationThreshold: 2s
+        slowCallDurationThreshold: 5s
     instances:
       auth-service-cb:
         baseConfig: default
